@@ -9,6 +9,7 @@ import java.net.http.HttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
     Logger logger = LoggerFactory.getLogger(TestController.class);
 
+    @Value("${jira.api.url}")
+    private String jiraApiUrl;
+
+    @Value("${jira.api.token}")
+    private String jiraApiToken;
+
     @GetMapping("/test-jira")
     public ResponseEntity<String> testJira() {
         HttpClient client = HttpClient.newHttpClient();
         
         try {
             HttpRequest request = HttpRequest.newBuilder()
-            .uri(new URI("https://project.atlassian.net/rest/api/2/issue/KEY"))
-            .header(HttpHeaders.AUTHORIZATION, "Basic BASE64")
+            .uri(new URI(jiraApiUrl))
+            .header(HttpHeaders.AUTHORIZATION, "Basic " + jiraApiToken)
             .GET()
             .build();
 
