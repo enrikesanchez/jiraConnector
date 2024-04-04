@@ -1,67 +1,34 @@
 package com.jira.connector.controller;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.jira.connector.service.JiraService;
 import com.jira.connector.valueobject.Issue;
 
 @RestController
 public class TestController {
     Logger logger = LoggerFactory.getLogger(TestController.class);
 
-    @Value("${jira.api.url}")
-    private String jiraApiUrl;
-
-    @Value("${jira.api.token}")
-    private String jiraApiToken;
+    @Autowired
+    JiraService jiraService;
 
     @GetMapping("/test-jira")
     public ResponseEntity<Issue> testJira() {
-        Issue issue = null;
-        HttpClient client = HttpClient.newHttpClient();
-        
+        Issue issue;
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-            .uri(new URI(jiraApiUrl))
-            .header(HttpHeaders.AUTHORIZATION, "Basic " + jiraApiToken)
-            .GET()
-            .build();
-
-            HttpResponse<String> response = client.send(request,
-                    HttpResponse.BodyHandlers.ofString());
-            logger.debug("Response Http Status {}", response.statusCode());
-            logger.debug("Response Body {}", response.body());
-
-            JsonObject issueJson = JsonParser.parseString(response.body())
-    .getAsJsonObject();
-            JsonObject fieldsJson = issueJson.getAsJsonObject("fields");
-            JsonObject statusJson = fieldsJson.getAsJsonObject("status");
-
-            issue = new Issue();
-            issue.setKey(issueJson.get("key").getAsString());
-            issue.setStatus(statusJson.get("name").getAsString());
-            issue.setDescription(fieldsJson.get("summary").getAsString());
-        } catch (final URISyntaxException use) {
-            logger.error("Error reading the url", use);
-        } catch (final IOException ioe) {
-            logger.error("Communication Error", ioe);
-        } catch (final InterruptedException ie) {
-            logger.error("Request has been cancelled", ie);
+            issue = jiraService.getIssue("SCRUM-1");
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error("JIRA API failed", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);    
         }
 
         return new ResponseEntity<>(issue, HttpStatus.OK);
