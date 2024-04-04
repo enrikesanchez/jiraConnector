@@ -16,6 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.jira.connector.valueobject.Issue;
+
 @RestController
 public class TestController {
     Logger logger = LoggerFactory.getLogger(TestController.class);
@@ -27,7 +31,8 @@ public class TestController {
     private String jiraApiToken;
 
     @GetMapping("/test-jira")
-    public ResponseEntity<String> testJira() {
+    public ResponseEntity<Issue> testJira() {
+        Issue issue = null;
         HttpClient client = HttpClient.newHttpClient();
         
         try {
@@ -41,6 +46,16 @@ public class TestController {
                     HttpResponse.BodyHandlers.ofString());
             logger.debug("Response Http Status {}", response.statusCode());
             logger.debug("Response Body {}", response.body());
+
+            JsonObject issueJson = JsonParser.parseString(response.body())
+    .getAsJsonObject();
+            JsonObject fieldsJson = issueJson.getAsJsonObject("fields");
+            JsonObject statusJson = fieldsJson.getAsJsonObject("status");
+
+            issue = new Issue();
+            issue.setKey(issueJson.get("key").getAsString());
+            issue.setStatus(statusJson.get("name").getAsString());
+            issue.setDescription(fieldsJson.get("summary").getAsString());
         } catch (final URISyntaxException use) {
             logger.error("Error reading the url", use);
         } catch (final IOException ioe) {
@@ -49,6 +64,6 @@ public class TestController {
             logger.error("Request has been cancelled", ie);
         }
 
-        return new ResponseEntity<>("Test", HttpStatus.OK);
+        return new ResponseEntity<>(issue, HttpStatus.OK);
     }
 }
