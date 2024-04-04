@@ -9,6 +9,7 @@ import java.net.http.HttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +25,15 @@ public class TestController {
         
         try {
             HttpRequest request = HttpRequest.newBuilder()
-            .uri(new URI("https://postman-echo.com/get"))
+            .uri(new URI("https://project.atlassian.net/rest/api/2/issue/KEY"))
+            .header(HttpHeaders.AUTHORIZATION, "Basic BASE64")
             .GET()
             .build();
 
-            HttpResponse<Void> response = client.send(request,
-                    HttpResponse.BodyHandlers.discarding());
+            HttpResponse<String> response = client.send(request,
+                    HttpResponse.BodyHandlers.ofString());
             logger.debug("Response Http Status {}", response.statusCode());
+            logger.debug("Response Body {}", response.body());
         } catch (final URISyntaxException use) {
             logger.error("Error reading the url", use);
         } catch (final IOException ioe) {
