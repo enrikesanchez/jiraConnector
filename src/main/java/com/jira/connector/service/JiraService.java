@@ -9,6 +9,7 @@ import java.net.http.HttpResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,11 @@ public class JiraService {
     @Value("${jira.api.token}")
     private String jiraApiToken;
 
+    @Autowired
+    HttpClient client;
+
+
     public Issue getIssue(final String key) throws URISyntaxException, IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
-        
         HttpRequest request = HttpRequest.newBuilder()
             .uri(new URI(jiraApiUrl + key))
             .header(HttpHeaders.AUTHORIZATION, "Basic " + jiraApiToken)
