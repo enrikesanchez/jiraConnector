@@ -44,6 +44,10 @@ public class JiraService {
         logger.debug("Response Http Status {}", response.statusCode());
         logger.debug("Response Body {}", response.body());
 
+        return mappingFromResponseToIssue(response);
+    }
+
+    private Issue mappingFromResponseToIssue(HttpResponse<String> response) {
         JsonObject issueJson = JsonParser.parseString(response.body())
     .getAsJsonObject();
         JsonObject fieldsJson = issueJson.getAsJsonObject("fields");
@@ -53,7 +57,6 @@ public class JiraService {
         issue.setKey(issueJson.get("key").getAsString());
         issue.setStatus(statusJson.get("name").getAsString());
         issue.setDescription(fieldsJson.get("summary").getAsString());
-
         return issue;
     }
 }
